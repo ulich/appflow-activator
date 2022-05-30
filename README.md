@@ -5,18 +5,23 @@ Self contained binary to (de)activate an AWS appflow.
 ## Usage
 
 ```
+locals {
+  # Take the latest version from https://github.com/ulich/appflow-activator/releases
+  appflow_activator_url = "https://github.com/ulich/appflow-activator/releases/download/0.0.1/appflow-activator-0.0.1-linux-amd64.tar.gz"
+}
+
 resource "null_resource" "activate_flow" {
   triggers = {
     flow_name = aws_appflow_flow.example.name
   }
 
   provisioner "local-exec" {
-    command = "/tmp/appflow-activator -flow-name=${self.triggers.flow_name}"
+    command = "curl -s -L ${local.appflow_activator_url} | tar xz -C /tmp && /tmp/appflow-activator -flow-name=${self.triggers.flow_name}"
   }
 
   provisioner "local-exec" {
     when = destroy
-    command = "/tmp/appflow-activator -flow-name=${self.triggers.flow_name} -deactivate"
+    command = "curl -s -L ${local.appflow_activator_url} | tar xz -C /tmp /tmp/appflow-activator -flow-name=${self.triggers.flow_name} -deactivate"
   } 
 
   depends_on = [
